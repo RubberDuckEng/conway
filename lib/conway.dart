@@ -23,6 +23,40 @@ class WorldState {
     _data = Uint8List(width * height);
   }
 
+  factory WorldState.fromString(String pickle) {
+    if (pickle.isEmpty) {
+      return WorldState(0, 0);
+    }
+    List<String> lines = pickle.split('\n');
+    if (lines.length <= 1 || lines.last.isNotEmpty) {
+      throw new ArgumentError(
+          'Each line in pattern must be terminated with a newline (U+0A).');
+    }
+    int height = lines.length - 1;
+    int width = lines[0].length;
+    WorldState world = WorldState(width, height);
+    for (int y = 0; y < height; ++y) {
+      if (lines[y].length != width) {
+        throw new ArgumentError(
+            'Each line in pattern must be the same length. Expected $width. Found ${lines[y].length}.');
+      }
+      for (int x = 0; x < width; ++x) {
+        String ch = lines[y][x];
+        switch (ch) {
+          case 'x':
+            world.setAt(x, y, CellState.alive);
+            break;
+          case '.':
+            // Cells in a newly created world default to dead.
+            break;
+          default:
+            throw new ArgumentError('Invalid character "$ch" in pattern.');
+        }
+      }
+    }
+    return world;
+  }
+
   CellState getAt(int x, int y) {
     if (x < 0 || y < 0 || x >= width || y >= height) {
       return CellState.dead;
@@ -68,6 +102,25 @@ class WorldState {
       }
     });
     return count;
+  }
+
+  @override
+  String toString() {
+    StringBuffer buffer = StringBuffer();
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        switch (getAt(x, y)) {
+          case CellState.alive:
+            buffer.write('x');
+            break;
+          case CellState.dead:
+            buffer.write('.');
+            break;
+        }
+      }
+      buffer.write('\n');
+    }
+    return buffer.toString();
   }
 }
 
