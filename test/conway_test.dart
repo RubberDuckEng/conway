@@ -66,6 +66,22 @@ void main() {
     world.setAt(1, 1, CellState.alive);
     expect(world.countAlive(), 1);
   });
+
+  test('forEach control', () {
+    WorldState world = WorldState(3, 7);
+    expect(world.width, 3);
+    expect(world.height, 7);
+    expect(world.countAlive(), 0);
+    world.setAll(CellState.alive);
+    expect(world.countAlive(), 3 * 7);
+    int count = 0;
+    world.forEach((x, y, value) {
+      ++count;
+      expect(value, CellState.alive);
+    });
+    expect(count, 3 * 7);
+  });
+
   test('one cell dies', () {
     WorldState world = WorldState(4, 4);
     expect(world.countAlive(), 0);
