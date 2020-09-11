@@ -133,12 +133,12 @@ WorldState next(WorldState oldWorld) {
     int aliveNeighbors = oldWorld.countAliveNeighbors(x, y);
     // Any live cell with two or three live neighbours survives.
     if (value == CellState.alive) {
-      if (aliveNeighbors >= 2) {
+      if (aliveNeighbors == 2 || aliveNeighbors == 3) {
         newWorld.setAt(x, y, CellState.alive);
       }
     } else {
       // Any dead cell with three live neighbours becomes a live cell.
-      if (aliveNeighbors >= 3) {
+      if (aliveNeighbors == 3) {
         newWorld.setAt(x, y, CellState.alive);
       }
     }
@@ -146,5 +146,5 @@ WorldState next(WorldState oldWorld) {
     // Similarly, all other dead cells stay dead.
   });
 
-  return null;
+  return newWorld;
 }
