@@ -69,6 +69,27 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  WorldState world;
+
+  void _incrementWorld() {
+    setState(() {
+      world = next(world);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    world = WorldState.fromString('''
+......
+.xx...
+.xx...
+...xx.
+...xx.
+......
+''');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,16 +101,16 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           Expanded(
             child: ConwayGame(
-              world: WorldState.fromString('''
-....
-.xx.
-..x.
-....
-'''),
+              world: world,
             ),
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementWorld,
+        tooltip: 'Next',
+        child: Icon(Icons.directions_run),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
