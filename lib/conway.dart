@@ -38,8 +38,8 @@ class WorldState {
   }
 
   void forEach(WorldStateCallback callback) {
-    for (int x = 0; x < width; ++x) {
-      for (int y = 0; y < width; ++y) {
+    for (int y = 0; y < height; ++y) {
+      for (int x = 0; x < width; ++x) {
         callback(x, y, getAt(x, y));
       }
     }
