@@ -104,4 +104,101 @@ void main() {
     expect(world.countAlive(), 4);
     expect(newWorld.countAlive(), 4);
   });
+
+  test('toString empty world', () {
+    WorldState world = WorldState(0, 0);
+    expect(world.width, 0);
+    expect(world.height, 0);
+    expect(world.countAlive(), 0);
+    expect(world.toString(), '');
+
+    WorldState reconstructed = WorldState.fromString(world.toString());
+    expect(reconstructed.width, 0);
+    expect(reconstructed.height, 0);
+    expect(reconstructed.countAlive(), 0);
+  });
+
+  test('toString empty 0x5', () {
+    WorldState world = WorldState(0, 5);
+    expect(world.width, 0);
+    expect(world.height, 5);
+    expect(world.countAlive(), 0);
+    expect(world.toString(), '\n\n\n\n\n');
+
+    WorldState reconstructed = WorldState.fromString(world.toString());
+    expect(reconstructed.width, 0);
+    expect(reconstructed.height, 5);
+    expect(reconstructed.countAlive(), 0);
+  });
+
+  test('toString empty 5x0', () {
+    WorldState world = WorldState(5, 0);
+    expect(world.width, 5);
+    expect(world.height, 0);
+    expect(world.countAlive(), 0);
+    expect(world.toString(), '');
+
+    WorldState reconstructed = WorldState.fromString(world.toString());
+    expect(reconstructed.width, 0);
+    expect(reconstructed.height, 0); // Doesn't round-trip.
+    expect(reconstructed.countAlive(), 0);
+  });
+
+  test('toString', () {
+    WorldState world = WorldState(4, 5);
+    expect(world.countAlive(), 0);
+    world.setAt(1, 1, CellState.alive);
+    world.setAt(1, 2, CellState.alive);
+    world.setAt(2, 1, CellState.alive);
+    world.setAt(2, 2, CellState.alive);
+    world.setAt(2, 3, CellState.alive);
+    expect(world.countAlive(), 5);
+    expect(world.toString(), '''
+....
+.xx.
+.xx.
+..x.
+....
+''');
+  });
+
+  test('fromString empty', () {
+    WorldState world = WorldState.fromString('');
+    expect(world.width, 0);
+    expect(world.height, 0);
+    expect(world.countAlive(), 0);
+  });
+
+  test('fromString', () {
+    WorldState world = WorldState.fromString('''
+....
+.xx.
+.xx.
+..x.
+....
+''');
+    expect(world.width, 4);
+    expect(world.height, 5);
+    expect(world.countAlive(), 5);
+    expect(world.getAt(1, 1), CellState.alive);
+    expect(world.getAt(1, 2), CellState.alive);
+    expect(world.getAt(2, 1), CellState.alive);
+    expect(world.getAt(2, 2), CellState.alive);
+    expect(world.getAt(2, 3), CellState.alive);
+  });
+
+  test('fromString invalid', () {
+    expect(() {
+      WorldState.fromString('x');
+    }, throwsArgumentError);
+    expect(() {
+      WorldState.fromString('x\nx');
+    }, throwsArgumentError);
+    expect(() {
+      WorldState.fromString('x\nxx\n');
+    }, throwsArgumentError);
+    expect(() {
+      WorldState.fromString('xy\nxx\n');
+    }, throwsArgumentError);
+  });
 }
