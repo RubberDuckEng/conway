@@ -121,6 +121,25 @@ class WorldState {
     }
     return buffer.toString();
   }
+
+  @override
+  bool operator ==(dynamic other) {
+    if (other is! WorldState) {
+      return false;
+    }
+    WorldState typedOther = other;
+    if (width != typedOther.width || height != typedOther.height) {
+      return false;
+    }
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        if (getAt(x, y) != typedOther.getAt(x, y)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 }
 
 typedef WorldStateCallback = Function(int x, int y, CellState value);

@@ -1,5 +1,80 @@
 import 'package:test/test.dart';
 import 'package:conway/conway.dart';
+import 'package:matcher/matcher.dart';
+
+class _Endures extends Matcher {
+  const _Endures();
+
+  @override
+  Description describe(Description description) {
+    return description.add('endures');
+  }
+
+  @override
+  bool matches(dynamic pickle, Map matchState) {
+    WorldState world;
+    try {
+      world = WorldState.fromFixture(pickle);
+    } catch (e) {
+      matchState["parseError"] = e;
+      return false;
+    }
+    WorldState nextWorld = next(world);
+    String nextFixture = nextWorld.toFixture();
+    matchState["nextWorld"] = nextFixture;
+    return pickle == nextFixture;
+  }
+
+  @override
+  Description describeMismatch(
+      item, Description mismatchDescription, Map matchState, bool verbose) {
+    if (matchState.containsKey("parseError")) {
+      return mismatchDescription.add(matchState["parseError"].toString());
+    }
+    return mismatchDescription
+        .add('${item}-- evolved to -->\n${matchState["nextWorld"]}');
+  }
+}
+
+const Matcher endures = _Endures();
+
+class _EvolvesTo extends Matcher {
+  final String targetFixture;
+
+  const _EvolvesTo(this.targetFixture);
+
+  @override
+  Description describe(Description description) {
+    return description.add('evolves to\n$targetFixture');
+  }
+
+  @override
+  bool matches(dynamic pickle, Map matchState) {
+    WorldState world;
+    try {
+      world = WorldState.fromFixture(pickle);
+    } catch (e) {
+      matchState["parseError"] = e;
+      return false;
+    }
+    WorldState nextWorld = next(world);
+    String nextFixture = nextWorld.toFixture();
+    matchState["nextWorld"] = nextFixture;
+    return targetFixture == nextFixture;
+  }
+
+  @override
+  Description describeMismatch(
+      item, Description mismatchDescription, Map matchState, bool verbose) {
+    if (matchState.containsKey("parseError")) {
+      return mismatchDescription.add(matchState["parseError"].toString());
+    }
+    return mismatchDescription
+        .add('${item}-- evolved to -->\n${matchState["nextWorld"]}');
+  }
+}
+
+Matcher evolvesTo(String targetFixture) => _EvolvesTo(targetFixture);
 
 void main() {
   test('World test', () {
@@ -93,54 +168,119 @@ void main() {
   });
 
   test('block endures', () {
-    WorldState world = WorldState(4, 4);
-    expect(world.countAlive(), 0);
-    world.setAt(1, 1, CellState.alive);
-    world.setAt(1, 2, CellState.alive);
-    world.setAt(2, 1, CellState.alive);
-    world.setAt(2, 2, CellState.alive);
-    expect(world.countAlive(), 4);
-    WorldState newWorld = next(world);
-    expect(world.countAlive(), 4);
-    expect(newWorld.countAlive(), 4);
+    String block = '''
+....
+.xx.
+.xx.
+....
+''';
+    expect(block, endures);
+  });
+
+  test('behive endures', () {
+    String behive = '''
+......
+..xx..
+.x..x.
+..xx..
+......
+''';
+    expect(behive, endures);
+  });
+
+  test('loaf endures', () {
+    String loaf = '''
+......
+..xx..
+.x..x.
+..x.x.
+...x..
+......
+''';
+    expect(loaf, endures);
+  });
+
+  test('boat endures', () {
+    String boat = '''
+.....
+.xx..
+.x.x.
+..x..
+.....
+''';
+    expect(boat, endures);
+  });
+
+  test('tub endures', () {
+    String tub = '''
+.....
+..x..
+.x.x.
+..x..
+.....
+''';
+    expect(tub, endures);
   });
 
   test('blinker blinks', () {
-    WorldState world = WorldState.fromFixture('''
+    String one = '''
 .....
 ..x..
 ..x..
 ..x..
 .....
-''');
-    world = next(world);
-    expect(world.toFixture(), '''
+''';
+    String two = '''
 .....
 .....
 .xxx.
 .....
 .....
-''');
+''';
+    expect(one, evolvesTo(two));
+    expect(two, evolvesTo(one));
+  });
+
+  test('toad jumps', () {
+    String one = '''
+......
+......
+..xxx.
+.xxx..
+......
+......
+''';
+    String two = '''
+......
+...x..
+.x..x.
+.x..x.
+..x...
+......
+''';
+    expect(one, evolvesTo(two));
+    expect(two, evolvesTo(one));
   });
 
   test('beacon beckons', () {
-    WorldState world = WorldState.fromFixture('''
+    String one = '''
 ......
 .xx...
 .xx...
 ...xx.
 ...xx.
 ......
-''');
-    world = next(world);
-    expect(world.toFixture(), '''
+''';
+    String two = '''
 ......
 .xx...
 .x....
 ....x.
 ...xx.
 ......
-''');
+''';
+    expect(one, evolvesTo(two));
+    expect(two, evolvesTo(one));
   });
 
   test('toFixture empty world', () {
