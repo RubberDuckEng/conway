@@ -106,7 +106,7 @@ void main() {
   });
 
   test('blinker blinks', () {
-    WorldState world = WorldState.fromString('''
+    WorldState world = WorldState.fromFixture('''
 .....
 ..x..
 ..x..
@@ -114,7 +114,7 @@ void main() {
 .....
 ''');
     world = next(world);
-    expect(world.toString(), '''
+    expect(world.toFixture(), '''
 .....
 .....
 .xxx.
@@ -124,7 +124,7 @@ void main() {
   });
 
   test('beacon beckons', () {
-    WorldState world = WorldState.fromString('''
+    WorldState world = WorldState.fromFixture('''
 ......
 .xx...
 .xx...
@@ -133,7 +133,7 @@ void main() {
 ......
 ''');
     world = next(world);
-    expect(world.toString(), '''
+    expect(world.toFixture(), '''
 ......
 .xx...
 .x....
@@ -143,46 +143,46 @@ void main() {
 ''');
   });
 
-  test('toString empty world', () {
+  test('toFixture empty world', () {
     WorldState world = WorldState(0, 0);
     expect(world.width, 0);
     expect(world.height, 0);
     expect(world.countAlive(), 0);
-    expect(world.toString(), '');
+    expect(world.toFixture(), '');
 
-    WorldState reconstructed = WorldState.fromString(world.toString());
+    WorldState reconstructed = WorldState.fromFixture(world.toFixture());
     expect(reconstructed.width, 0);
     expect(reconstructed.height, 0);
     expect(reconstructed.countAlive(), 0);
   });
 
-  test('toString empty 0x5', () {
+  test('toFixture empty 0x5', () {
     WorldState world = WorldState(0, 5);
     expect(world.width, 0);
     expect(world.height, 5);
     expect(world.countAlive(), 0);
-    expect(world.toString(), '\n\n\n\n\n');
+    expect(world.toFixture(), '\n\n\n\n\n');
 
-    WorldState reconstructed = WorldState.fromString(world.toString());
+    WorldState reconstructed = WorldState.fromFixture(world.toFixture());
     expect(reconstructed.width, 0);
     expect(reconstructed.height, 5);
     expect(reconstructed.countAlive(), 0);
   });
 
-  test('toString empty 5x0', () {
+  test('toFixture empty 5x0', () {
     WorldState world = WorldState(5, 0);
     expect(world.width, 5);
     expect(world.height, 0);
     expect(world.countAlive(), 0);
-    expect(world.toString(), '');
+    expect(world.toFixture(), '');
 
-    WorldState reconstructed = WorldState.fromString(world.toString());
+    WorldState reconstructed = WorldState.fromFixture(world.toFixture());
     expect(reconstructed.width, 0);
     expect(reconstructed.height, 0); // Doesn't round-trip.
     expect(reconstructed.countAlive(), 0);
   });
 
-  test('toString', () {
+  test('toFixture', () {
     WorldState world = WorldState(4, 5);
     expect(world.countAlive(), 0);
     world.setAt(1, 1, CellState.alive);
@@ -191,7 +191,7 @@ void main() {
     world.setAt(2, 2, CellState.alive);
     world.setAt(2, 3, CellState.alive);
     expect(world.countAlive(), 5);
-    expect(world.toString(), '''
+    expect(world.toFixture(), '''
 ....
 .xx.
 .xx.
@@ -200,15 +200,15 @@ void main() {
 ''');
   });
 
-  test('fromString empty', () {
-    WorldState world = WorldState.fromString('');
+  test('fromFixture empty', () {
+    WorldState world = WorldState.fromFixture('');
     expect(world.width, 0);
     expect(world.height, 0);
     expect(world.countAlive(), 0);
   });
 
-  test('fromString', () {
-    WorldState world = WorldState.fromString('''
+  test('fromFixture', () {
+    WorldState world = WorldState.fromFixture('''
 ....
 .xx.
 .xx.
@@ -225,18 +225,18 @@ void main() {
     expect(world.getAt(2, 3), CellState.alive);
   });
 
-  test('fromString invalid', () {
+  test('fromFixture invalid', () {
     expect(() {
-      WorldState.fromString('x');
+      WorldState.fromFixture('x');
     }, throwsArgumentError);
     expect(() {
-      WorldState.fromString('x\nx');
+      WorldState.fromFixture('x\nx');
     }, throwsArgumentError);
     expect(() {
-      WorldState.fromString('x\nxx\n');
+      WorldState.fromFixture('x\nxx\n');
     }, throwsArgumentError);
     expect(() {
-      WorldState.fromString('xy\nxx\n');
+      WorldState.fromFixture('xy\nxx\n');
     }, throwsArgumentError);
   });
 }
