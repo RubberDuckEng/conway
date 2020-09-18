@@ -1,5 +1,80 @@
 import 'package:test/test.dart';
 import 'package:conway/conway.dart';
+import 'package:matcher/matcher.dart';
+
+class _Endures extends Matcher {
+  const _Endures();
+
+  @override
+  Description describe(Description description) {
+    return description.add('endures');
+  }
+
+  @override
+  bool matches(dynamic pickle, Map matchState) {
+    WorldState world;
+    try {
+      world = WorldState.fromFixture(pickle);
+    } catch (e) {
+      matchState["parseError"] = e;
+      return false;
+    }
+    WorldState nextWorld = next(world);
+    String nextFixture = nextWorld.toFixture();
+    matchState["nextWorld"] = nextFixture;
+    return pickle == nextFixture;
+  }
+
+  @override
+  Description describeMismatch(
+      item, Description mismatchDescription, Map matchState, bool verbose) {
+    if (matchState.containsKey("parseError")) {
+      return mismatchDescription.add(matchState["parseError"].toString());
+    }
+    return mismatchDescription
+        .add('${item}-- evolved to -->\n${matchState["nextWorld"]}');
+  }
+}
+
+const Matcher endures = _Endures();
+
+class _EvolvesTo extends Matcher {
+  final String targetFixture;
+
+  const _EvolvesTo(this.targetFixture);
+
+  @override
+  Description describe(Description description) {
+    return description.add('evolves to\n$targetFixture');
+  }
+
+  @override
+  bool matches(dynamic pickle, Map matchState) {
+    WorldState world;
+    try {
+      world = WorldState.fromFixture(pickle);
+    } catch (e) {
+      matchState["parseError"] = e;
+      return false;
+    }
+    WorldState nextWorld = next(world);
+    String nextFixture = nextWorld.toFixture();
+    matchState["nextWorld"] = nextFixture;
+    return targetFixture == nextFixture;
+  }
+
+  @override
+  Description describeMismatch(
+      item, Description mismatchDescription, Map matchState, bool verbose) {
+    if (matchState.containsKey("parseError")) {
+      return mismatchDescription.add(matchState["parseError"].toString());
+    }
+    return mismatchDescription
+        .add('${item}-- evolved to -->\n${matchState["nextWorld"]}');
+  }
+}
+
+Matcher evolvesTo(String targetFixture) => _EvolvesTo(targetFixture);
 
 void main() {
   test('World test', () {
@@ -93,96 +168,161 @@ void main() {
   });
 
   test('block endures', () {
-    WorldState world = WorldState(4, 4);
-    expect(world.countAlive(), 0);
-    world.setAt(1, 1, CellState.alive);
-    world.setAt(1, 2, CellState.alive);
-    world.setAt(2, 1, CellState.alive);
-    world.setAt(2, 2, CellState.alive);
-    expect(world.countAlive(), 4);
-    WorldState newWorld = next(world);
-    expect(world.countAlive(), 4);
-    expect(newWorld.countAlive(), 4);
+    String block = '''
+....
+.xx.
+.xx.
+....
+''';
+    expect(block, endures);
+  });
+
+  test('behive endures', () {
+    String behive = '''
+......
+..xx..
+.x..x.
+..xx..
+......
+''';
+    expect(behive, endures);
+  });
+
+  test('loaf endures', () {
+    String loaf = '''
+......
+..xx..
+.x..x.
+..x.x.
+...x..
+......
+''';
+    expect(loaf, endures);
+  });
+
+  test('boat endures', () {
+    String boat = '''
+.....
+.xx..
+.x.x.
+..x..
+.....
+''';
+    expect(boat, endures);
+  });
+
+  test('tub endures', () {
+    String tub = '''
+.....
+..x..
+.x.x.
+..x..
+.....
+''';
+    expect(tub, endures);
   });
 
   test('blinker blinks', () {
-    WorldState world = WorldState.fromString('''
+    String one = '''
 .....
 ..x..
 ..x..
 ..x..
 .....
-''');
-    world = next(world);
-    expect(world.toString(), '''
+''';
+    String two = '''
 .....
 .....
 .xxx.
 .....
 .....
-''');
+''';
+    expect(one, evolvesTo(two));
+    expect(two, evolvesTo(one));
+  });
+
+  test('toad jumps', () {
+    String one = '''
+......
+......
+..xxx.
+.xxx..
+......
+......
+''';
+    String two = '''
+......
+...x..
+.x..x.
+.x..x.
+..x...
+......
+''';
+    expect(one, evolvesTo(two));
+    expect(two, evolvesTo(one));
   });
 
   test('beacon beckons', () {
-    WorldState world = WorldState.fromString('''
+    String one = '''
 ......
 .xx...
 .xx...
 ...xx.
 ...xx.
 ......
-''');
-    world = next(world);
-    expect(world.toString(), '''
+''';
+    String two = '''
 ......
 .xx...
 .x....
 ....x.
 ...xx.
 ......
-''');
+''';
+    expect(one, evolvesTo(two));
+    expect(two, evolvesTo(one));
   });
 
-  test('toString empty world', () {
+  test('toFixture empty world', () {
     WorldState world = WorldState(0, 0);
     expect(world.width, 0);
     expect(world.height, 0);
     expect(world.countAlive(), 0);
-    expect(world.toString(), '');
+    expect(world.toFixture(), '');
 
-    WorldState reconstructed = WorldState.fromString(world.toString());
+    WorldState reconstructed = WorldState.fromFixture(world.toFixture());
     expect(reconstructed.width, 0);
     expect(reconstructed.height, 0);
     expect(reconstructed.countAlive(), 0);
   });
 
-  test('toString empty 0x5', () {
+  test('toFixture empty 0x5', () {
     WorldState world = WorldState(0, 5);
     expect(world.width, 0);
     expect(world.height, 5);
     expect(world.countAlive(), 0);
-    expect(world.toString(), '\n\n\n\n\n');
+    expect(world.toFixture(), '\n\n\n\n\n');
 
-    WorldState reconstructed = WorldState.fromString(world.toString());
+    WorldState reconstructed = WorldState.fromFixture(world.toFixture());
     expect(reconstructed.width, 0);
     expect(reconstructed.height, 5);
     expect(reconstructed.countAlive(), 0);
   });
 
-  test('toString empty 5x0', () {
+  test('toFixture empty 5x0', () {
     WorldState world = WorldState(5, 0);
     expect(world.width, 5);
     expect(world.height, 0);
     expect(world.countAlive(), 0);
-    expect(world.toString(), '');
+    expect(world.toFixture(), '');
 
-    WorldState reconstructed = WorldState.fromString(world.toString());
+    WorldState reconstructed = WorldState.fromFixture(world.toFixture());
     expect(reconstructed.width, 0);
     expect(reconstructed.height, 0); // Doesn't round-trip.
     expect(reconstructed.countAlive(), 0);
   });
 
-  test('toString', () {
+  test('toFixture', () {
     WorldState world = WorldState(4, 5);
     expect(world.countAlive(), 0);
     world.setAt(1, 1, CellState.alive);
@@ -191,7 +331,7 @@ void main() {
     world.setAt(2, 2, CellState.alive);
     world.setAt(2, 3, CellState.alive);
     expect(world.countAlive(), 5);
-    expect(world.toString(), '''
+    expect(world.toFixture(), '''
 ....
 .xx.
 .xx.
@@ -200,15 +340,15 @@ void main() {
 ''');
   });
 
-  test('fromString empty', () {
-    WorldState world = WorldState.fromString('');
+  test('fromFixture empty', () {
+    WorldState world = WorldState.fromFixture('');
     expect(world.width, 0);
     expect(world.height, 0);
     expect(world.countAlive(), 0);
   });
 
-  test('fromString', () {
-    WorldState world = WorldState.fromString('''
+  test('fromFixture', () {
+    WorldState world = WorldState.fromFixture('''
 ....
 .xx.
 .xx.
@@ -225,18 +365,18 @@ void main() {
     expect(world.getAt(2, 3), CellState.alive);
   });
 
-  test('fromString invalid', () {
+  test('fromFixture invalid', () {
     expect(() {
-      WorldState.fromString('x');
+      WorldState.fromFixture('x');
     }, throwsArgumentError);
     expect(() {
-      WorldState.fromString('x\nx');
+      WorldState.fromFixture('x\nx');
     }, throwsArgumentError);
     expect(() {
-      WorldState.fromString('x\nxx\n');
+      WorldState.fromFixture('x\nxx\n');
     }, throwsArgumentError);
     expect(() {
-      WorldState.fromString('xy\nxx\n');
+      WorldState.fromFixture('xy\nxx\n');
     }, throwsArgumentError);
   });
 }

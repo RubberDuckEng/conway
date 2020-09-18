@@ -23,7 +23,7 @@ class WorldState {
     _data = Uint8List(width * height);
   }
 
-  factory WorldState.fromString(String pickle) {
+  factory WorldState.fromFixture(String pickle) {
     if (pickle.isEmpty) {
       return WorldState(0, 0);
     }
@@ -104,8 +104,7 @@ class WorldState {
     return count;
   }
 
-  @override
-  String toString() {
+  String toFixture() {
     StringBuffer buffer = StringBuffer();
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
@@ -121,6 +120,25 @@ class WorldState {
       buffer.write('\n');
     }
     return buffer.toString();
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    if (other is! WorldState) {
+      return false;
+    }
+    WorldState typedOther = other;
+    if (width != typedOther.width || height != typedOther.height) {
+      return false;
+    }
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        if (getAt(x, y) != typedOther.getAt(x, y)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 }
 
