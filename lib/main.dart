@@ -23,14 +23,26 @@ class MyApp extends StatelessWidget {
 class ConwayPainter extends CustomPainter {
   final WorldState world;
 
-  ConwayPainter(this.world);
+  ConwayPainter(this.world) : super(repaint: world);
+
+  CellPosition findHitCell(Offset offset, Size size) {
+    double xStep = size.width / world.width;
+    double yStep = size.height / world.height;
+
+    return CellPosition(
+      offset.dx ~/ xStep,
+      offset.dy ~/ yStep,
+    );
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     double xStep = size.width / world.width;
     double yStep = size.height / world.height;
 
-    Paint paint = Paint()..color = Colors.black;
+    Paint paint = Paint()..color = Colors.white;
+    canvas.drawRect(Offset.zero & size, paint);
+    paint.color = Colors.black;
     for (int y = 0; y < world.height; ++y) {
       for (int x = 0; x < world.width; ++x) {
         if (world.getAt(x, y) == CellState.alive) {
@@ -41,21 +53,43 @@ class ConwayPainter extends CustomPainter {
     }
   }
 
+  // We pass the world to the superclass as the
+  // repaint listener, we always return false.
   @override
-  bool shouldRepaint(ConwayPainter oldDelegate) {
-    // This function assumes that the worlds are immutable. Really we should
-    // call some deeper comparison operator.
-    return world != oldDelegate.world;
-  }
+  bool shouldRepaint(ConwayPainter oldDelegate) => false;
 }
+
+typedef CellPositionCallback = void Function(CellPosition position);
 
 class ConwayGame extends StatelessWidget {
   final WorldState world;
+  final CellPositionCallback onToggle;
 
-  ConwayGame({Key key, this.world}) : super(key: key);
+  ConwayGame({Key key, this.world, this.onToggle}) : super(key: key);
+
+  GestureTapUpCallback _createOnTapUp(
+      ConwayPainter painter, BuildContext context) {
+    if (onToggle == null) {
+      return null;
+    }
+    return (TapUpDetails details) {
+      CellPosition position =
+          painter.findHitCell(details.localPosition, context.size);
+      // It's possible painter might want borders
+      // or other non-cell positions in the future
+      // but for now we assume all pixels inside painter
+      // represent valid positions.
+      assert(position != null);
+      onToggle(position);
+    };
+  }
 
   Widget build(BuildContext context) {
-    return CustomPaint(painter: ConwayPainter(world));
+    var painter = ConwayPainter(world);
+    return GestureDetector(
+      onTapUp: _createOnTapUp(painter, context),
+      child: CustomPaint(painter: painter),
+    );
   }
 }
 
@@ -81,12 +115,16 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     world = WorldState.fromFixture('''
-......
-.xx...
-.xx...
-...xx.
-...xx.
-......
+........................
+.xx....xx....xx....xx...
+.xx....xx....xx....xx...
+...xx....xx....xx....xx.
+...xx....xx....xx....xx.
+........................
+........................
+........................
+........................
+........................
 ''');
   }
 
@@ -96,15 +134,24 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ConwayGame(
-              world: world,
+      body: DecoratedBox(
+        decoration: BoxDecoration(color: Colors.black12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AspectRatio(
+              aspectRatio: 1.0,
+              child: ConwayGame(
+                  world: world,
+                  onToggle: (CellPosition position) {
+                    setState(() {
+                      world.toggle(position);
+                    });
+                  }),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementWorld,

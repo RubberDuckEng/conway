@@ -1,11 +1,12 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 
 enum CellState {
   dead,
   alive,
 }
 
-class WorldState {
+class WorldState extends ChangeNotifier {
   Uint8List _data;
 
   final int width;
@@ -64,11 +65,32 @@ class WorldState {
     return CellState.values[_data[x + width * y]];
   }
 
+  CellState getAtPosition(CellPosition position) =>
+      getAt(position.x, position.y);
+
+  // All mutations need to go through this function
+  // or call notifyListeners themselves.
   void setAt(int x, int y, CellState value) {
     if (x < 0 || y < 0 || x >= width || y >= height) {
       return;
     }
     _data[x + width * y] = value.index;
+    notifyListeners();
+  }
+
+  void setAtPosition(CellPosition position, CellState value) {
+    setAt(position.x, position.y, value);
+  }
+
+  void toggle(CellPosition position) {
+    switch (getAtPosition(position)) {
+      case CellState.alive:
+        setAtPosition(position, CellState.dead);
+        break;
+      case CellState.dead:
+        setAtPosition(position, CellState.alive);
+        break;
+    }
   }
 
   void forEach(WorldStateCallback callback) {
@@ -139,6 +161,17 @@ class WorldState {
       }
     }
     return true;
+  }
+}
+
+class CellPosition {
+  final int x;
+  final int y;
+
+  CellPosition(this.x, this.y);
+
+  String toString() {
+    return 'CellPosition($x, $y)';
   }
 }
 
