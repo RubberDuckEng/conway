@@ -32,7 +32,7 @@ class _Endures extends Matcher {
       return mismatchDescription.add(matchState["parseError"].toString());
     }
     return mismatchDescription
-        .add('${item}-- evolved to -->\n${matchState["nextWorld"]}');
+        .add('$item-- evolved to -->\n${matchState["nextWorld"]}');
   }
 }
 
@@ -70,7 +70,7 @@ class _EvolvesTo extends Matcher {
       return mismatchDescription.add(matchState["parseError"].toString());
     }
     return mismatchDescription
-        .add('${item}-- evolved to -->\n${matchState["nextWorld"]}');
+        .add('$item-- evolved to -->\n${matchState["nextWorld"]}');
   }
 }
 
@@ -378,5 +378,27 @@ void main() {
     expect(() {
       WorldState.fromFixture('xy\nxx\n');
     }, throwsArgumentError);
+  });
+
+  test('fromRLE Glider invalid', () {
+    var world = WorldState.fromRLE(r'''
+#C This is a glider.
+x = 3, y = 3
+bo$2bo$3o!
+''');
+    expect(world.toFixture(), '''
+.x.
+..x
+xxx
+''');
+  });
+
+  test('fromRLE empty', () {
+    var world = WorldState.fromRLE(r'''
+x = 3, y = 2
+!
+''');
+    expect(world.width, 3);
+    expect(world.height, 2);
   });
 }

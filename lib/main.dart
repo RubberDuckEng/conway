@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Conway\'s Game of Life'),
     );
   }
 }
@@ -93,6 +93,33 @@ class ConwayGame extends StatelessWidget {
   }
 }
 
+class RLEEntryField extends StatelessWidget {
+  final ValueChanged<WorldState> onWorldAvailable;
+
+  RLEEntryField({Key key, this.onWorldAvailable}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      maxLines: null,
+      decoration: InputDecoration(
+        border: OutlineInputBorder(),
+        labelText: 'RLE',
+      ),
+      onSubmitted: (String value) {
+        try {
+          onWorldAvailable(WorldState.fromRLE(value));
+        } catch (ex) {
+          final snackBar = SnackBar(
+            content: Text('RLE Parse Error'),
+          );
+          Scaffold.of(context).showSnackBar(snackBar);
+        }
+      },
+    );
+  }
+}
+
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
@@ -149,6 +176,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       world.toggle(position);
                     });
                   }),
+            ),
+            RLEEntryField(
+              onWorldAvailable: (WorldState value) {
+                setState(() {
+                  world = value;
+                });
+              },
             ),
           ],
         ),
