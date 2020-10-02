@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'conway.dart';
+import 'examples.dart';
 
 void main() {
   runApp(MyApp());
@@ -93,33 +94,6 @@ class ConwayGame extends StatelessWidget {
   }
 }
 
-class RLEEntryField extends StatelessWidget {
-  final ValueChanged<WorldState> onWorldAvailable;
-
-  RLEEntryField({Key key, this.onWorldAvailable}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      maxLines: null,
-      decoration: InputDecoration(
-        border: OutlineInputBorder(),
-        labelText: 'RLE',
-      ),
-      onSubmitted: (String value) {
-        try {
-          onWorldAvailable(WorldState.fromRLE(value));
-        } catch (ex) {
-          final snackBar = SnackBar(
-            content: Text('RLE Parse Error'),
-          );
-          Scaffold.of(context).showSnackBar(snackBar);
-        }
-      },
-    );
-  }
-}
-
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
@@ -130,32 +104,28 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  WorldState world;
+  WorldState displayedWorld;
+  WorldState selectedWorld;
 
   void _incrementWorld() {
     setState(() {
-      world = next(world);
+      displayedWorld = next(displayedWorld);
     });
   }
 
   @override
   void initState() {
     super.initState();
-    world = WorldState.fromFixture('''
-........................
-.xx....xx....xx....xx...
-.xx....xx....xx....xx...
-...xx....xx....xx....xx.
-...xx....xx....xx....xx.
-........................
-........................
-........................
-........................
-........................
-''');
+    selectExampleWorld(examples.first);
   }
 
-  @override
+  void selectExampleWorld(WorldState world) {
+    setState(() {
+      selectedWorld = world;
+      displayedWorld = WorldState.clone(selectedWorld);
+    });
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -170,19 +140,22 @@ class _MyHomePageState extends State<MyHomePage> {
             AspectRatio(
               aspectRatio: 1.0,
               child: ConwayGame(
-                  world: world,
+                  world: displayedWorld,
                   onToggle: (CellPosition position) {
                     setState(() {
-                      world.toggle(position);
+                      displayedWorld.toggle(position);
                     });
                   }),
             ),
-            RLEEntryField(
-              onWorldAvailable: (WorldState value) {
-                setState(() {
-                  world = value;
-                });
-              },
+            DropdownButton<WorldState>(
+              value: selectedWorld,
+              onChanged: selectExampleWorld,
+              items: examples.map((w) {
+                return DropdownMenuItem(
+                  value: w,
+                  child: Text(w.name),
+                );
+              }).toList(),
             ),
           ],
         ),

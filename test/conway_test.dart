@@ -401,4 +401,22 @@ x = 3, y = 2
     expect(world.width, 3);
     expect(world.height, 2);
   });
+
+  test('newline in RLE', () {
+    expect(
+      WorldState.fromRLE(r'''#N Heavyweight spaceship
+#O John Conway
+#C A very well-known period 4 c/2 orthogonal spaceship.
+#C www.conwaylife.com/wiki/index.php?title=Heavyweight_spaceship
+x = 7, y = 5, rule = B3/S23
+3b2o2b$bo4bo$o6b$o5bo$6o!''').toFixture(),
+      WorldState.fromRLE(r'''#N Heavyweight spaceship
+#O John Conway
+#C A very well-known period 4 c/2 orthogonal spaceship.
+#C www.conwaylife.com/wiki/index.php?title=Heavyweight_spaceship
+x = 7, y = 5, rule = B3/S23
+3b2o2b$bo4bo$
+o6b$o5bo$6o!''').toFixture(),
+    );
+  });
 }

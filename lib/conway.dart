@@ -9,6 +9,8 @@ enum CellState {
 class WorldState extends ChangeNotifier {
   Uint8List _data;
 
+  final String name;
+
   final int width;
   final int height;
 
@@ -20,8 +22,15 @@ class WorldState extends ChangeNotifier {
     }
   }
 
-  WorldState(this.width, this.height) {
+  WorldState(this.width, this.height, {this.name}) {
     _data = Uint8List(width * height);
+  }
+
+  WorldState.clone(WorldState other)
+      : width = other.width,
+        height = other.height,
+        name = other.name {
+    _data = Uint8List.fromList(other._data);
   }
 
   factory WorldState.fromFixture(String pickle) {
@@ -62,7 +71,15 @@ class WorldState extends ChangeNotifier {
     List<String> lines = rle.split('\n');
     bool haveSize = false;
     WorldState world;
+    String name;
+    int x = 0;
+    int y = 0;
+
     for (String line in lines) {
+      if (line.startsWith('#N ')) {
+        name = line.substring(3);
+        continue;
+      }
       if (line.isEmpty || line.startsWith('#')) {
         continue;
       }
@@ -91,12 +108,10 @@ class WorldState extends ChangeNotifier {
         if (width == null || height == null) {
           throw ArgumentError('Did not file a width or height');
         }
-        world = WorldState(width, height);
+        world = WorldState(width, height, name: name);
         haveSize = true;
         continue;
       }
-      int x = 0;
-      int y = 0;
       String runCountBuffer = '';
       int flushRunCount() {
         String buffer = runCountBuffer;
@@ -168,6 +183,15 @@ class WorldState extends ChangeNotifier {
     }
   }
 
+  WorldState withPadding(int pad) {
+    WorldState world =
+        WorldState(width + 2 * pad, height + 2 * pad, name: name);
+    forEach((x, y, value) {
+      world.setAt(x + pad, y + pad, value);
+    });
+    return world;
+  }
+
   void forEach(WorldStateCallback callback) {
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
@@ -236,6 +260,16 @@ class WorldState extends ChangeNotifier {
       }
     }
     return true;
+  }
+
+  @override
+  int get hashCode {
+    return toFixture().hashCode;
+  }
+
+  @override
+  String toString() {
+    return "World $name $width x $height";
   }
 }
 
